@@ -43,9 +43,9 @@ Holder.js - client side image placeholders
 		},
 
 		/**
-		 * Runs Holder with options. By default runs Holder on all images with "holder.js" in their source attributes.
+		 * Runs Holder with options. By default runs Holder on all marker with "holder.js" in their source attributes.
 		 *
-		 * @param {Object} userOptions Options object, can contain domain, themes, images, and bgnodes properties
+		 * @param {Object} userOptions Options object, can contain domain, themes, marker, and bgnodes properties
 		 */
 		run: function(userOptions) {
 			userOptions = userOptions || {};

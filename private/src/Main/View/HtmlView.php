@@ -27,5 +27,4 @@ class HtmlView extends BaseView {
         $params = $this->params;
         include($this->viewPath.$this->view.'.php');
     }
-
 }

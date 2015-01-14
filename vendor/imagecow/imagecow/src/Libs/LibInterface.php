@@ -121,7 +121,7 @@ interface LibInterface
     public function flop();
 
     /**
-     * Define the image compression quality for jpg images
+     * Define the image compression quality for jpg marker
      *
      * @param integer $quality The quality (from 0 to 100)
      *

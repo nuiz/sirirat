@@ -7,14 +7,14 @@ abstract class ImageTest_ extends PHPUnit_Framework_TestCase
 {
     public static function setUpBeforeClass()
     {
-        foreach (glob(__DIR__.'/images/tmp.'.static::$library.'.*') as $file) {
+        foreach (glob(__DIR__.'/marker/tmp.'.static::$library.'.*') as $file) {
             unlink($file);
         }
     }
 
     public function testJpg () {
-        $file = __DIR__.'/images/image.jpg';
-        $tmpFile = __DIR__.'/images/tmp.'.static::$library.'.image.jpg';
+        $file = __DIR__.'/marker/image.jpg';
+        $tmpFile = __DIR__.'/marker/tmp.'.static::$library.'.image.jpg';
 
         $image = Image::create($file, static::$library);
 
@@ -53,8 +53,8 @@ abstract class ImageTest_ extends PHPUnit_Framework_TestCase
 
 
     public function testPng () {
-        $file = __DIR__.'/images/image.png';
-        $tmpFile = __DIR__.'/images/tmp.'.static::$library.'.image.png';
+        $file = __DIR__.'/marker/image.png';
+        $tmpFile = __DIR__.'/marker/tmp.'.static::$library.'.image.png';
 
         $image = Image::create($file, static::$library);
 

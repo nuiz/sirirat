@@ -8,8 +8,8 @@ class IconTest extends PHPUnit_Framework_TestCase
 {
     public function testIcon ()
     {
-    	$file = __DIR__.'/images/favicon.ico';
-        $tmpFile = __DIR__.'/images/tmp.favicon.png';
+    	$file = __DIR__.'/marker/favicon.ico';
+        $tmpFile = __DIR__.'/marker/tmp.favicon.png';
 
     	$icon = new IconExtractor($file);
 

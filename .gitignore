@@ -1,4 +1,4 @@
 # Created by .ignore support plugin (hsz.mobi)
-private/ios
-private/android
-private/images
+public/ios
+public/android
+public/marker

@@ -32,6 +32,8 @@ class RequestInfo {
         $ctType = isset($_SERVER['CONTENT_TYPE'])? $_SERVER['CONTENT_TYPE']: null;
         $method = isset($_SERVER['REQUEST_METHOD'])? $_SERVER['REQUEST_METHOD']: 'GET';
 
+        $files = [];
+
         if($ctType=='application/json'){
             $jsonText = file_get_contents('php://input');
             $params = json_decode($jsonText, true);
@@ -39,6 +41,7 @@ class RequestInfo {
         }
         else if($method=='POST'){
             $params = $_POST;
+            $files = $_FILES;
         }
         else if($method=='PUT' || $method == 'DELETE'){
             $put = array();
@@ -46,7 +49,7 @@ class RequestInfo {
                 parse_str(file_get_contents("php://input"), $put);
             }
             else {
-                
+
             }
             $params = $put;
         }
@@ -61,7 +64,15 @@ class RequestInfo {
             $url_params = array();
         }
 
-        return new self($method, $_GET, $params, $_FILES, $url_params);
+        return new self($method, $_GET, $params, $files, $url_params);
+    }
+
+    public function files(){
+        return $this->files;
+    }
+
+    public function file($name, $default = null){
+        return isset($this->files[$name])? $this->files[$name]: $default;
     }
 
     public function params()
