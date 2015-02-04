@@ -13,18 +13,21 @@ class MongoHelper {
     public static function createSlice($page, $limit, $total = null){
         $skip = $page*$limit;
         if(is_null($total) || ($skip+$limit) < $total){
-            return [-$skip, $limit];
+            /** @noinspection PhpLanguageLevelInspection */
+            return array(-$skip, $limit);
         }
 
         if($skip-$limit > $total){
-            return [-$skip, 0];
+            /** @noinspection PhpLanguageLevelInspection */
+            return array(-$skip, 0);
         }
 
         else if($skip > $total){
             $skip = $total;
             $limit = $total%$limit;
         }
-        return [-$skip, $limit];
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(-$skip, $limit);
     }
 
     public static function standardId($id){

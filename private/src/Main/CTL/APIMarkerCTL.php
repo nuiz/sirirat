@@ -31,7 +31,7 @@ class APIMarkerCTL extends BaseCTL {
         foreach($items as $key=> $item){
             $this->build($items[$key]);
         }
-        $res = ['length'=> count($items), 'items'=> $items];
+        $res = array('length'=> count($items), 'items'=> $items);
         return new JsonView($res);
     }
 
@@ -49,13 +49,14 @@ class APIMarkerCTL extends BaseCTL {
      */
     public function getByName(){
         $masterDB = MedooFactory::getInstance();
-        $result = $masterDB->select('marker', '*', ['name'=> $this->reqInfo->param('name'), "LIMIT"=> 1]);
+        $result = $masterDB->select('marker', '*', array('name'=> $this->reqInfo->param('name'), "LIMIT"=> 1));
         if(isset($result[0])){
             $item = $result[0];
             $this->build($item);
             return new JsonView($item);
         }
         else {
+            /** @noinspection PhpLanguageLevelInspection */
             return new JsonView([
                 'error'=> 'not found.'
             ]);
@@ -65,7 +66,7 @@ class APIMarkerCTL extends BaseCTL {
     public function _get($id){
         // get ebook data
         $masterDB = MedooFactory::getInstance();
-        $result = $masterDB->select('marker', '*', ['id'=> $id, "LIMIT"=> 1]);
+        $result = $masterDB->select('marker', '*', array('id'=> $id, "LIMIT"=> 1));
         if(isset($result[0])){
             $item = $result[0];
             $this->build($item);

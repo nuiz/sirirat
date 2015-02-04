@@ -65,6 +65,7 @@ class ParseInput extends BaseCTL {
                         $temp_file = tempnam($tmp_dir, 'upl');
                         file_put_contents($temp_file, $body);
                         unset($body);
+                        /** @noinspection PhpLanguageLevelInspection */
                         $files[$name] = [
                             'name'=> $filename,
                             'type'=> $headers['content-type'],
@@ -80,6 +81,7 @@ class ParseInput extends BaseCTL {
             }
         }
 
+        /** @noinspection PhpLanguageLevelInspection */
         return ['data'=> $data, 'files'=> $files];
     }
 }

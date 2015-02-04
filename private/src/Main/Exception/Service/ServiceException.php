@@ -10,7 +10,8 @@ namespace Main\Exception\Service;
 
 
 class ServiceException extends \Exception {
-    protected $response = [];
+    protected /** @noinspection PhpLanguageLevelInspection */
+        $response = [];
 
     /**
      * @return array

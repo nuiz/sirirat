@@ -32,6 +32,7 @@ class RequestInfo {
         $ctType = isset($_SERVER['CONTENT_TYPE'])? $_SERVER['CONTENT_TYPE']: null;
         $method = isset($_SERVER['REQUEST_METHOD'])? $_SERVER['REQUEST_METHOD']: 'GET';
 
+        /** @noinspection PhpLanguageLevelInspection */
         $files = [];
 
         if($ctType=='application/json'){

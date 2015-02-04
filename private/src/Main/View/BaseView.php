@@ -10,7 +10,8 @@ namespace Main\View;
 
 
 abstract class BaseView {
-    public $headers = [], $params = [];
+    public /** @noinspection PhpLanguageLevelInspection */
+        $headers = array(), $params = array();
     public function setHeaders(array $headers){
         $this->headers = $headers;
     }

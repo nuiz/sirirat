@@ -6,12 +6,13 @@
  * Time: 4:36 PM
  */
 
+/** @noinspection PhpLanguageLevelInspection */
 $configs = array(
     "application" => array(
         "name" => "",
         "title" => "",
         "version" => "",
-        "base_url" => "http://localhost/sirirat",
+        "base_url" => "http://papangping.com/sirirat",
         "site_url" => "",
         "share_url" => "",
         "directory" => dirname(__FILE__),
@@ -33,9 +34,9 @@ $configs = array(
         "medoo" => array(
             "master"=> array(
                 "database_type"=> "mysql",
-                "database_name" => "sirirat",
+                "database_name" => "papangping_ssr",
                 "server" => "localhost",
-                "username" => 'root',
+                "username" => 'papangping_ssr',
                 'password' => '111111',
 
                 // optional

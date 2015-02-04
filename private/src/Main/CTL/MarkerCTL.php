@@ -30,7 +30,7 @@ class MarkerCTL extends BaseCTL {
         foreach($items as $key=> $item){
             $this->build($items[$key]);
         }
-        $v->setParams(['items'=> $items]);
+        $v->setParams(array('items'=> $items));
         return $v;
     }
 
@@ -40,10 +40,10 @@ class MarkerCTL extends BaseCTL {
      */
     public function getAdd(){
         $v = new HtmlView('/add');
-        $v->setParams([
+        $v->setParams(array(
             'action'=> URL::absolute('/marker/add'),
             'title'=> 'Add Maker'
-        ]);
+        ));
         return $v;
     }
 
@@ -56,14 +56,14 @@ class MarkerCTL extends BaseCTL {
         $files = $this->reqInfo->files();
         try {
             $v = new Validator($params);
-            $v->rule('required', ['name']);
+            $v->rule('required', array('name'));
 
             if(!$v->validate()){
                 throw new ServiceException(null);
             }
 
             $v = new Validator($files);
-            $v->rule('required', ['ios', 'android', 'marker']);
+            $v->rule('required', array('ios', 'android', 'marker'));
 
             if(!$v->validate()){
                 throw new ServiceException(null);
@@ -74,13 +74,13 @@ class MarkerCTL extends BaseCTL {
             }
 
             $db = MedooFactory::getInstance();
-            if($db->count('marker', null, null, []) > 0){
+//            if($db->count('marker', null, null, []) > 0){
+//
+//            }
 
-            }
-
-            $insert = [
+            $insert = array(
                 'name'=> $params['name']
-            ];
+            );
             $time = time();
 
             $fileName = uniqid("marker").'.jpeg';
@@ -118,11 +118,11 @@ class MarkerCTL extends BaseCTL {
         $v = new HtmlView('/add');
         $id = $this->reqInfo->urlParam('id');
         $item = $this->_get($id);
-        $v->setParams([
+        $v->setParams(array(
             'action'=> URL::absolute('/marker/edit/'.$id),
             'title'=> 'Edit Maker',
             'data'=> $item
-        ]);
+        ));
         return $v;
     }
 
@@ -133,13 +133,12 @@ class MarkerCTL extends BaseCTL {
     public function postEdit(){
         $params = $this->reqInfo->params();
         $files = $this->reqInfo->files();
-        $remove_file = [];
-
+        $remove_file = array();
 
         try {
             $id = $this->reqInfo->urlParam('id');
             $time = time();
-            $update = [];
+            $update = array();
 
             $old = $this->_get($id);
 
@@ -178,17 +177,16 @@ class MarkerCTL extends BaseCTL {
             }
 
             $db = MedooFactory::getInstance();
-            $id = $db->update('marker', $update, ['id'=> $id]);
+            $id = $db->update('marker', $update, array('id'=> $id));
+
+            foreach($remove_file as $value){
+                unlink(@$value);
+            }
 
             return new RedirectView(URL::absolute('/marker'));
         }
         catch (ServiceException $e){
             return new RedirectView(URL::absolute('/marker'));
-        }
-        finally {
-            foreach($remove_file as $value){
-                unlink(@$value);
-            }
         }
     }
 
@@ -198,7 +196,7 @@ class MarkerCTL extends BaseCTL {
      */
     public function delete(){
         $db = MedooFactory::getInstance();
-        $db->delete('marker', ['id'=> $this->reqInfo->urlParam('id')]);
+        $db->delete('marker', array('id'=> $this->reqInfo->urlParam('id')));
 
         return new RedirectView(URL::absolute('/marker'));
     }
@@ -206,7 +204,7 @@ class MarkerCTL extends BaseCTL {
     public function _get($id){
         // get ebook data
         $masterDB = MedooFactory::getInstance();
-        $result = $masterDB->select('marker', '*', ['id'=> $id, "LIMIT"=> 1]);
+        $result = $masterDB->select('marker', '*', array('id'=> $id, "LIMIT"=> 1));
         if(isset($result[0])){
             $item = $result[0];
             $this->build($item);

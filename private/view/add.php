@@ -4,7 +4,7 @@ if(isset($params['data'])){
     $data = $params['data'];
 }
 else {
-    $data = [];
+    $data = array();
     $data['name'] = '';
 }
 ?>

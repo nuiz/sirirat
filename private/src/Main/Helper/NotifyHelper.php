@@ -37,6 +37,8 @@ class NotifyHelper {
 
     public static function sendAll($objectId, $type, $header, $message){
         $db = DB::getDB();
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
         $users = $db->users->find([], ['setting', 'ios_device_token', 'android_token']);
         foreach($users as $item){
             $userId = MongoHelper::mongoId($item['_id']);
@@ -86,16 +88,18 @@ class NotifyHelper {
             }
             if(isset($item['android_token'])){
                 if(count($item['android_token']) > 0){
+                    /** @noinspection PhpLanguageLevelInspection */
                     $tokens = [];
                     foreach($item['android_token'] as $token){
                         $tokens[] = $token;
                     }
 
                     try {
-                        GCMHerlper::send($tokens, [
+                        /** @noinspection PhpLanguageLevelInspection */
+                        GCMHerlper::send($tokens, array(
                             'message'=> $pushMessage,
                             'object'=> $args
-                        ]);
+                        ));
                     }
                     catch(\Exception $e){
                         error_log($e->getMessage());

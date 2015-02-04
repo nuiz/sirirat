@@ -10,12 +10,13 @@ namespace Main\View;
 
 
 class JsonView extends BaseView {
-    protected $val = null, $options = [];
-    public function __construct($val, $options = [])
+    protected $val = null, /** @noinspection PhpLanguageLevelInspection */
+        $options = [];
+    public function __construct($val, $options = array())
     {
-        $default = [
+        $default = array(
             'connection_close'=> true
-        ];
+        );
         $this->options = array_merge($default, $options);
         $this->val = $val;
     }

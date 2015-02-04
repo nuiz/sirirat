@@ -14,7 +14,8 @@ use Main\DB\Medoo\MedooFactory;
 class ImageHelper {
     public static function makeResponse($id){
         $masterDB = MedooFactory::getInstance();
-        $result = $masterDB->select("marker", '*', ['id'=> $id, "LIMIT"=> 1]);
+        /** @noinspection PhpLanguageLevelInspection */
+        $result = $masterDB->select("marker", '*', array('id'=> $id, "LIMIT"=> 1));
         if(isset($result[0])){
             $result[0]['url'] = URL::absolute('/image/'.$id);
             return $result[0];

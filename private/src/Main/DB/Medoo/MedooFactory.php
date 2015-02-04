@@ -15,7 +15,8 @@ class MedooFactory {
     /**
      * @param \medoo[] $instances;
      */
-    protected static $instances = [];
+    protected static /** @noinspection PhpLanguageLevelInspection */
+        $instances = array();
 
     /**
      * @param string $name
@@ -24,7 +25,9 @@ class MedooFactory {
     public static function getInstance($name = 'master'){
         if(!isset(self::$instances[$name])){
             $paramPath = 'db.medoo.'.$name;
-            self::$instances[$name] = new \medoo([
+            /** @noinspection PhpLanguageLevelInspection */
+            /** @noinspection PhpLanguageLevelInspection */
+            self::$instances[$name] = new \medoo(array(
                 // required
                 'database_type' => AppConfig::get($paramPath.'.database_type'),
                 'database_name' => AppConfig::get($paramPath.'.database_name'),
@@ -33,10 +36,10 @@ class MedooFactory {
                 'password' => AppConfig::get($paramPath.'.password'),
                 'port' => AppConfig::get($paramPath.'.port'),
                 'charset' => AppConfig::get($paramPath.'.charset'),
-                'option' => [
+                'option' => array(
                     \PDO::ATTR_CASE => \PDO::CASE_NATURAL
-                ]
-            ]);
+                )
+            ));
         }
         return self::$instances[$name];
     }

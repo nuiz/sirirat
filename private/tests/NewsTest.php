@@ -20,7 +20,8 @@ class NewsTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testAddNews(){
-        $insertParam = ['title'=> 'เพิ่มข่าว', 'content'=> 'รายละเอียดข่าว'];
+        /** @noinspection PhpLanguageLevelInspection */
+        $insertParam = array('title'=> 'เพิ่มข่าว', 'content'=> 'รายละเอียดข่าว');
         $item = $this->service->add($insertParam, $this->context);
         $this->assertEquals($insertParam['title'], $item['title']);
         $this->assertEquals($insertParam['content'], $item['content']);
@@ -29,7 +30,8 @@ class NewsTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testGetsNews(){
-        return $this->service->gets([], $this->context);
+        /** @noinspection PhpLanguageLevelInspection */
+        return $this->service->gets(array(), $this->context);
     }
 
     public function testEditNews(){

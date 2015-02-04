@@ -11,37 +11,45 @@ namespace Main\Helper;
 
 class ResponseHelper {
     public static function notFound($message = "Object not found"){
-        return [
-            'error'=> [
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
+            'error'=> array(
                 'code'=> 404,
                 'message'=> $message,
                 'type'=> 'NotFound'
-            ]
-        ];
+            )
+        );
     }
 
     public static function error($message, $code = 500, $type = 'Error'){
-        return [
-            'error'=> [
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
+            'error'=> array(
                 'code'=> $code,
                 'message'=> $message,
                 'type'=> $type
-            ]
-        ];
+            )
+        );
     }
 
     public static function validateError($invalid, $code = 500, $type = 'Error'){
-        return [
-            'error'=> [
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
+            'error'=> array(
                 'code'=> $code,
                 'message'=> 'Invalid parameter',
                 'type'=> $type,
                 'fields'=> $invalid
-            ]
-        ];
+            )
+        );
     }
 
     public static function notAuthorize($message = 'Not authorized'){
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
         return [
             'error'=> [
                 'code'=> 401,
@@ -52,6 +60,8 @@ class ResponseHelper {
     }
 
     public static function requireAuthorize($message = 'Require authorized'){
+        /** @noinspection PhpLanguageLevelInspection */
+        /** @noinspection PhpLanguageLevelInspection */
         return [
             'error'=> [
                 'code'=> 402,

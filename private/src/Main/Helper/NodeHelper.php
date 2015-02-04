@@ -12,28 +12,32 @@ class NodeHelper {
 
     public static function news($id){
         $id = MongoHelper::standardId($id);
-        return [
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
             'share'=> URL::share('/news.php?id='.$id)
-        ];
+        );
     }
 
     public static function roomtype($id){
         $id = MongoHelper::standardId($id);
-        return [
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
             'picture'=> URL::absolute('/roomtype/'.$id.'/picture'),
             'share'=> URL::share('/roomtype/'.$id)
-        ];
+        );
     }
 
     public static function place($id){
         $id = MongoHelper::standardId($id);
-        return [
+        /** @noinspection PhpLanguageLevelInspection */
+        return array(
             'picture'=> URL::absolute('/place/'.$id.'/picture')
-        ];
+        );
     }
 
     public static function overviewPromotion($id){
         $id = MongoHelper::standardId($id);
+        /** @noinspection PhpLanguageLevelInspection */
         return [
             'picture'=> URL::absolute('/overview/promotion/'.$id.'/picture')
         ];
@@ -41,6 +45,7 @@ class NodeHelper {
 
     public static function serviceItem($id){
         $id = MongoHelper::standardId($id);
+        /** @noinspection PhpLanguageLevelInspection */
         return [
             'picture'=> URL::absolute('/service/'.$id.'/picture'),
         ];
@@ -48,6 +53,7 @@ class NodeHelper {
 
     public static function serviceFolder($id){
         $id = MongoHelper::standardId($id);
+        /** @noinspection PhpLanguageLevelInspection */
         return [
             'children'=> URL::absolute('/service/'.$id.'/children')
         ];

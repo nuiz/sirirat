@@ -10,7 +10,7 @@ namespace Main\Event;
 
 
 class Event {
-    protected static $events = [];
+    protected static $events = array();
 
     public static function add($event, \Closure $func){
         self::$events[$event][] = $func;
