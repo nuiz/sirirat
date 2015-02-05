@@ -12,7 +12,8 @@ $configs = array(
         "name" => "",
         "title" => "",
         "version" => "",
-        "base_url" => "http://papangping.com/sirirat",
+//        "base_url" => "http://tufftexgroup.com/sirirat",
+        "base_url" => "http://localhost/sirirat",
         "site_url" => "",
         "share_url" => "",
         "directory" => dirname(__FILE__),
@@ -34,9 +35,9 @@ $configs = array(
         "medoo" => array(
             "master"=> array(
                 "database_type"=> "mysql",
-                "database_name" => "papangping_ssr",
+                "database_name" => "sirirat",
                 "server" => "localhost",
-                "username" => 'papangping_ssr',
+                "username" => 'root',
                 'password' => '111111',
 
                 // optional

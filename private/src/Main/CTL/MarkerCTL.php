@@ -42,7 +42,19 @@ class MarkerCTL extends BaseCTL {
         $v = new HtmlView('/add');
         $v->setParams(array(
             'action'=> URL::absolute('/marker/add'),
-            'title'=> 'Add Maker'
+            'title'=> 'Add'
+        ));
+        return $v;
+    }
+
+    /**
+     * @GET
+     * @uri /form
+     */
+    public function form(){
+        $v = new HtmlView('/form/model');
+        $v->setParams(array(
+            'action'=> URL::absolute('/form/model'),
         ));
         return $v;
     }
@@ -70,7 +82,10 @@ class MarkerCTL extends BaseCTL {
             }
 
             if($files['marker']['type'] != 'image/jpeg'){
-                throw new ServiceException(null);
+//                throw new ServiceException(null);
+                echo "marker is not jpg/jpeg/png file";
+                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
+                exit();
             }
 
             $db = MedooFactory::getInstance();
@@ -78,24 +93,65 @@ class MarkerCTL extends BaseCTL {
 //
 //            }
 
+            // check is duplicate
+
+            if($this->isDuplicateName($params['name'])){
+                echo "duplicate name";
+                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
+            }
+
             $insert = array(
                 'name'=> $params['name']
             );
             $time = time();
 
-            $fileName = uniqid("marker").'.jpeg';
+            // marker
+
+            $ext = array_pop(explode('.', $files['marker']['name']));
+            $ext = strtolower($ext);
+
+            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+                echo "marker is not jpg/jpeg/png file";
+                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
+                exit();
+            }
+
+            $fileName = uniqid("marker").'.'.$ext;
             $des = 'public/marker/'.$fileName;
             move_uploaded_file($files['marker']['tmp_name'], $des);
             $insert['marker_path'] = $fileName;
             $insert['marker_updated_at'] = $time;
 
-            $fileName = uniqid("ios").'.jpeg';
+
+            // ios
+
+            $ext = array_pop(explode('.', $files['ios']['name']));
+            $ext = strtolower($ext);
+
+//            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+//                echo "marker is not jpg/jpeg/png file";
+//                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
+//                exit();
+//            }
+
+            $fileName = uniqid("ios").'.'.$ext;
             $des = 'public/ios/'.$fileName;
             move_uploaded_file($files['ios']['tmp_name'], $des);
             $insert['ios_path'] = $fileName;
             $insert['ios_updated_at'] = $time;
 
-            $fileName = uniqid("android").'.jpeg';
+            // android
+
+            $ext = array_pop(explode('.', $files['android']['name']));
+            $ext = strtolower($ext);
+//
+//            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+//                echo "marker is not jpg/jpeg/png file";
+//                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
+//                exit();
+//            }
+
+            $fileName = uniqid("android").'.'.$ext;
             $des = 'public/android/'.$fileName;
             move_uploaded_file($files['android']['tmp_name'], $des);
             $insert['android_path'] = $fileName;
@@ -135,6 +191,8 @@ class MarkerCTL extends BaseCTL {
         $files = $this->reqInfo->files();
         $remove_file = array();
 
+        // check file .unity
+
         try {
             $id = $this->reqInfo->urlParam('id');
             $time = time();
@@ -143,11 +201,24 @@ class MarkerCTL extends BaseCTL {
             $old = $this->_get($id);
 
             if(isset($params['name'])){
+                if($this->isDuplicateName($params['name']) && $params['name'] != $old['name']){
+                    echo "duplicate name";
+                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
+                    exit();
+                }
                 $update['name'] = $params['name'];
             }
 
-            if(isset($files['marker'])){
+            if(isset($files['marker']) && is_uploaded_file($files['marker']['tmp_name'])){
                 $ext = array_pop(explode('.', $files['marker']['name']));
+                $ext = strtolower($ext);
+
+                if(!in_array($ext, array("jpg", "jpeg", "png"))){
+                    echo "marker is not jpg/jpeg/png file";
+                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
+                    exit();
+                }
+
                 $fileName = uniqid("marker").'.'.$ext;
                 $des = 'public/marker/'.$fileName;
                 move_uploaded_file($files['marker']['tmp_name'], $des);
@@ -156,9 +227,17 @@ class MarkerCTL extends BaseCTL {
                 $remove_file[] = 'public/marker/'.$old['marker_path'];
             }
 
-            if(isset($files['ios'])){
+            if(isset($files['ios']) && is_uploaded_file($files['ios']['tmp_name'])){
                 $ext = array_pop(explode('.', $files['ios']['name']));
-                $fileName = uniqid("ios").'.'.$ext;;
+                $ext = strtolower($ext);
+
+//                if(!in_array($ext, array("jpg", "jpeg", "png"))){
+//                    echo "marker is not jpg/jpeg/png file";
+//                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
+//                    exit();
+//                }
+
+                $fileName = uniqid("ios").'.'.$ext;
                 $des = 'public/ios/'.$fileName;
                 move_uploaded_file($files['ios']['tmp_name'], $des);
                 $update['ios_path'] = $fileName;
@@ -166,9 +245,17 @@ class MarkerCTL extends BaseCTL {
                 $remove_file[] = 'public/ios/'.$old['ios_path'];
             }
 
-            if(isset($files['android'])){
+            if(isset($files['android']) && is_uploaded_file($files['android']['tmp_name'])){
                 $ext = array_pop(explode('.', $files['android']['name']));
-                $fileName = uniqid("android").'.'.$ext;;
+//                $ext = strtolower($ext);
+//
+//                if(!in_array($ext, array("jpg", "jpeg", "png"))){
+//                    echo "marker is not jpg/jpeg/png file";
+//                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
+//                    exit();
+//                }
+
+                $fileName = uniqid("android").'.'.$ext;
                 $des = 'public/android/'.$fileName;
                 move_uploaded_file($files['android']['tmp_name'], $des);
                 $update['android_path'] = $fileName;
@@ -213,6 +300,11 @@ class MarkerCTL extends BaseCTL {
         else {
             return null;
         }
+    }
+
+    public function isDuplicateName($name){
+        $masterDB = MedooFactory::getInstance();
+        return count($masterDB->select('marker', '*', array('name'=> $name))) > 0;
     }
 
     public function build(&$item){
