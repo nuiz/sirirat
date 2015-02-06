@@ -6,24 +6,25 @@
  * Time: 17:58
  */
 ?>
-<form>
+<form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="type" value="model"/>
     <div class="form-group">
         <label>Name</label>
-        <input type="text" name="name" class="form-control">
+        <input type="text" name="name" class="form-control" required="">
     </div>
     <div class="form-group">
-        <label for="exampleInputFile">thumbnail</label>
-        <input type="file" name="thumbnail">
+        <label>thumbnail</label>
+        <input type="file" name="thumbnail" required="">
         <p class="help-block">jpeg,jpg,png</p>
     </div>
     <div class="form-group">
-        <label for="exampleInputFile">IOS</label>
-        <input type="file" name="ios">
+        <label>IOS</label>
+        <input type="file" name="ios" required="">
         <p class="help-block">.unity</p>
     </div>
     <div class="form-group">
-        <label for="exampleInputFile">Android</label>
-        <input type="file" name="android">
+        <label>Android</label>
+        <input type="file" name="android" required="">
         <p class="help-block">.unity</p>
     </div>
     <button type="submit" class="btn btn-default">Submit</button>

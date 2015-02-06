@@ -10,14 +10,20 @@
 
 </style>
 <div style="padding: 20px 0;">
-    <form>
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="type" value="video"/>
         <div class="form-group">
             <label>Name</label>
-            <input type="text" name="name" class="form-control">
+            <input type="text" name="name" class="form-control" required="">
         </div>
         <div class="form-group">
-            <label for="exampleInputFile">Video</label>
-            <input type="file" name="video">
+            <label>Thumbnail</label>
+            <input type="file" name="thumbnail" required="">
+            <p class="help-block">jpg,jpeg,png</p>
+        </div>
+        <div class="form-group">
+            <label>Video</label>
+            <input type="file" name="video" required="">
             <p class="help-block">mp4</p>
         </div>
         <button type="submit" class="btn btn-default">Submit</button>

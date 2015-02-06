@@ -78,8 +78,9 @@ class APIMarkerCTL extends BaseCTL {
     }
 
     public function build(&$item){
-        $item['marker_url'] = URL::absolute('/public/marker/'.$item['marker_path']);
+        $item['thumbnail_url'] = URL::absolute('/public/image/'.$item['thumbnail_path']);
         $item['ios_url'] = URL::absolute('/public/ios/'.$item['ios_path']);
         $item['android_url'] = URL::absolute('/public/android/'.$item['android_path']);
+        $item['video_url'] = URL::absolute('/public/video/'.$item['video_path']);
     }
 }

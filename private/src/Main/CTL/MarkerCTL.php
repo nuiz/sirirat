@@ -8,7 +8,9 @@
 
 namespace Main\CTL;
 use Main\DB\Medoo\MedooFactory;
+use Main\Event\Event;
 use Main\Exception\Service\ServiceException;
+use Main\Helper\ArrayHelper;
 use Main\Helper\ImageHelper;
 use Main\Helper\URL;
 use Main\View\HtmlView;
@@ -64,105 +66,14 @@ class MarkerCTL extends BaseCTL {
      * @uri /add
      */
     public function postAdd(){
-        $params = $this->reqInfo->params();
-        $files = $this->reqInfo->files();
-        try {
-            $v = new Validator($params);
-            $v->rule('required', array('name'));
-
-            if(!$v->validate()){
-                throw new ServiceException(null);
-            }
-
-            $v = new Validator($files);
-            $v->rule('required', array('ios', 'android', 'marker'));
-
-            if(!$v->validate()){
-                throw new ServiceException(null);
-            }
-
-            if($files['marker']['type'] != 'image/jpeg'){
-//                throw new ServiceException(null);
-                echo "marker is not jpg/jpeg/png file";
-                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
-                exit();
-            }
-
-            $db = MedooFactory::getInstance();
-//            if($db->count('marker', null, null, []) > 0){
-//
-//            }
-
-            // check is duplicate
-
-            if($this->isDuplicateName($params['name'])){
-                echo "duplicate name";
-                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
-            }
-
-            $insert = array(
-                'name'=> $params['name']
-            );
-            $time = time();
-
-            // marker
-
-            $ext = array_pop(explode('.', $files['marker']['name']));
-            $ext = strtolower($ext);
-
-            if(!in_array($ext, array("jpg", "jpeg", "png"))){
-                echo "marker is not jpg/jpeg/png file";
-                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
-                exit();
-            }
-
-            $fileName = uniqid("marker").'.'.$ext;
-            $des = 'public/marker/'.$fileName;
-            move_uploaded_file($files['marker']['tmp_name'], $des);
-            $insert['marker_path'] = $fileName;
-            $insert['marker_updated_at'] = $time;
-
-
-            // ios
-
-            $ext = array_pop(explode('.', $files['ios']['name']));
-            $ext = strtolower($ext);
-
-//            if(!in_array($ext, array("jpg", "jpeg", "png"))){
-//                echo "marker is not jpg/jpeg/png file";
-//                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
-//                exit();
-//            }
-
-            $fileName = uniqid("ios").'.'.$ext;
-            $des = 'public/ios/'.$fileName;
-            move_uploaded_file($files['ios']['tmp_name'], $des);
-            $insert['ios_path'] = $fileName;
-            $insert['ios_updated_at'] = $time;
-
-            // android
-
-            $ext = array_pop(explode('.', $files['android']['name']));
-            $ext = strtolower($ext);
-//
-//            if(!in_array($ext, array("jpg", "jpeg", "png"))){
-//                echo "marker is not jpg/jpeg/png file";
-//                echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/add").'" />';
-//                exit();
-//            }
-
-            $fileName = uniqid("android").'.'.$ext;
-            $des = 'public/android/'.$fileName;
-            move_uploaded_file($files['android']['tmp_name'], $des);
-            $insert['android_path'] = $fileName;
-            $insert['android_updated_at'] = $time;
-
-            $id = $db->insert('marker', $insert);
-
-            return new RedirectView(URL::absolute('/marker'));
+        if($_POST["type"] == "image"){
+            return $this->_addImage();
         }
-        catch (ServiceException $e){
-            return new RedirectView(URL::absolute('/marker'));
+        else if($_POST["type"] == "video"){
+            return $this->_addVideo();
+        }
+        else if($_POST["type"] == "model"){
+            return $this->_addModel();
         }
     }
 
@@ -247,13 +158,6 @@ class MarkerCTL extends BaseCTL {
 
             if(isset($files['android']) && is_uploaded_file($files['android']['tmp_name'])){
                 $ext = array_pop(explode('.', $files['android']['name']));
-//                $ext = strtolower($ext);
-//
-//                if(!in_array($ext, array("jpg", "jpeg", "png"))){
-//                    echo "marker is not jpg/jpeg/png file";
-//                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
-//                    exit();
-//                }
 
                 $fileName = uniqid("android").'.'.$ext;
                 $des = 'public/android/'.$fileName;
@@ -308,8 +212,236 @@ class MarkerCTL extends BaseCTL {
     }
 
     public function build(&$item){
-        $item['marker_url'] = URL::absolute('/public/marker/'.$item['marker_path']);
+        $item['thumbnail_url'] = URL::absolute('/public/image/'.$item['thumbnail_path']);
         $item['ios_url'] = URL::absolute('/public/ios/'.$item['ios_path']);
         $item['android_url'] = URL::absolute('/public/android/'.$item['android_path']);
+        $item['video_url'] = URL::absolute('/public/video/'.$item['video_path']);
+    }
+
+    public function _getExt($fileName){
+        return array_pop(explode(".", $fileName));
+    }
+
+    public function _addImage(){
+        $back_url = URL::absolute("/marker/add?type=image");
+        $next_url = URL::absolute("/marker");
+
+        $db = MedooFactory::getInstance();
+
+        // check image
+        $image = $this->reqInfo->file("image");
+        if(!is_uploaded_file($image["tmp_name"])){
+            $this->errorRedirect("required image", $back_url);
+        }
+
+        // check type image
+        $ext = $this->_getExt($image["name"]);
+        if(!in_array($ext, array("jpg", "jpeg", "png"))){
+            $this->errorRedirect("image only extension jpg,jpeg,png", $back_url);
+        }
+
+        // validate parameter
+        $params = $this->reqInfo->params();
+        $v = new Validator($params);
+        $v->rule("required", array("name", "type"));
+        if(!$v->validate()){
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+
+        // check duplicate name
+        if($this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        $fileName = uniqid("image").'.'.$ext;
+        $des = 'public/image/'.$fileName;
+        move_uploaded_file($image['tmp_name'], $des);
+        $insert = ArrayHelper::filterKey(array("name", "type"), $params);
+        $insert['image_path'] = $fileName;
+        $insert['thumbnail_path'] = $fileName;
+        $insert['type'] = "image";
+        $insert['version'] = 1;
+
+        Event::add("when_add_image_fail", function() use($des) {
+            @unlink($des);
+        });
+
+        $id = $db->insert("marker", $insert);
+        if(!$id){
+            Event::trigger("when_add_image_fail");
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function _addVideo(){
+        $back_url = URL::absolute("/marker/add?type=video");
+        $next_url = URL::absolute("/marker");
+
+        $db = MedooFactory::getInstance();
+
+        // validate parameter
+        $params = $this->reqInfo->params();
+        $v = new Validator($params);
+        $v->rule("required", array("name", "type"));
+        if(!$v->validate()){
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+        $insert = ArrayHelper::filterKey(array("name", "type"), $params);
+
+        // check duplicate name
+        if($this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        // check image
+        $image = $this->reqInfo->file("thumbnail");
+        if(!is_uploaded_file($image["tmp_name"])){
+            $this->errorRedirect("required thumbnail", $back_url);
+        }
+
+        // check type image
+        $ext = $this->_getExt($image["name"]);
+        if(!in_array($ext, array("jpg", "jpeg", "png"))){
+            $this->errorRedirect("image only extension jpg,jpeg,png", $back_url);
+        }
+
+        $fileName = uniqid("image").'.'.$ext;
+        $desImg = 'public/image/'.$fileName;
+        move_uploaded_file($image['tmp_name'], $desImg);
+        Event::add("when_add_video_fail", function() use($desImg) {
+            @unlink($desImg);
+        });
+        $insert['thumbnail_path'] = $fileName;
+
+        // check video
+        $video = $this->reqInfo->file("video");
+        if(!is_uploaded_file($video["tmp_name"])){
+            $this->errorRedirect("required video", $back_url);
+        }
+
+        // check type video
+        $ext = $this->_getExt($video["name"]);
+        if(!in_array($ext, array("mp4"))){
+            $this->errorRedirect("video only extension mp4", $back_url);
+        }
+
+        $fileName = uniqid("image").'.'.$ext;
+        $desVideo = 'public/video/'.$fileName;
+        move_uploaded_file($video['tmp_name'], $desVideo);
+        Event::add("when_add_video_fail", function() use($desVideo) {
+            @unlink($desVideo);
+        });
+        $insert['video_path'] = $fileName;
+
+        $insert['type'] = "video";
+        $insert['version'] = 1;
+
+        $id = $db->insert("marker", $insert);
+        if(!$id){
+            Event::trigger("when_add_video_fail");
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function _addModel(){
+        $back_url = URL::absolute("/marker/add?type=model");
+        $next_url = URL::absolute("/marker");
+
+        $db = MedooFactory::getInstance();
+
+        // validate parameter
+        $params = $this->reqInfo->params();
+        $v = new Validator($params);
+        $v->rule("required", array("name", "type"));
+        if(!$v->validate()){
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+        $insert = ArrayHelper::filterKey(array("name", "type"), $params);
+
+        // check duplicate name
+        if($this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        // check image
+        $image = $this->reqInfo->file("thumbnail");
+        if(!is_uploaded_file($image["tmp_name"])){
+            $this->errorRedirect("required thumbnail", $back_url);
+        }
+
+        // check type image
+        $ext = $this->_getExt($image["name"]);
+        if(!in_array($ext, array("jpg", "jpeg", "png"))){
+            $this->errorRedirect("image only extension jpg,jpeg,png", $back_url);
+        }
+
+        $fileName = uniqid("image").'.'.$ext;
+        $desImg = 'public/image/'.$fileName;
+        move_uploaded_file($image['tmp_name'], $desImg);
+        Event::add("when_add_model_fail", function() use($desImg) {
+            @unlink($desImg);
+        });
+        $insert['thumbnail_path'] = $fileName;
+
+        // check ios
+        $ios = $this->reqInfo->file("ios");
+        if(!is_uploaded_file($ios["tmp_name"])){
+            $this->errorRedirect("required ios", $back_url);
+        }
+
+        // check type ios
+        $ext = $this->_getExt($ios["name"]);
+        if(!in_array($ext, array("unity"))){
+            $this->errorRedirect("ios only extension .unity", $back_url);
+        }
+
+        $fileName = uniqid("ios").'.'.$ext;
+        $desIOS = 'public/ios/'.$fileName;
+        move_uploaded_file($ios['tmp_name'], $desIOS);
+        Event::add("when_add_model_fail", function() use($desIOS) {
+            @unlink($desIOS);
+        });
+        $insert['ios_path'] = $fileName;
+
+        // check android
+        $android = $this->reqInfo->file("android");
+        if(!is_uploaded_file($android["tmp_name"])){
+            $this->errorRedirect("required android", $back_url);
+        }
+
+        // check type android
+        $ext = $this->_getExt($android["name"]);
+        if(!in_array($ext, array("unity"))){
+            $this->errorRedirect("android only extension .unity", $back_url);
+        }
+
+        $fileName = uniqid("android").'.'.$ext;
+        $desAndroid = 'public/android/'.$fileName;
+        move_uploaded_file($android['tmp_name'], $desAndroid);
+        Event::add("when_add_model_fail", function() use($desAndroid) {
+            @unlink($desAndroid);
+        });
+        $insert['android_path'] = $fileName;
+
+        $insert['type'] = "model";
+        $insert['version'] = 1;
+
+        $id = $db->insert("marker", $insert);
+        if(!$id){
+            Event::trigger("when_add_model_fail");
+            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function errorRedirect($message, $url){
+        echo $message;
+        echo '<meta http-equiv="refresh" content="3; url='.$url.'" />';
+        exit();
     }
 }
