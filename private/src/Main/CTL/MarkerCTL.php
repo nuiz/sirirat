@@ -82,13 +82,11 @@ class MarkerCTL extends BaseCTL {
      * @uri /edit/[:id]
      */
     public function getEdit(){
-        $v = new HtmlView('/add');
+        $v = new HtmlView('/edit');
         $id = $this->reqInfo->urlParam('id');
         $item = $this->_get($id);
         $v->setParams(array(
-            'action'=> URL::absolute('/marker/edit/'.$id),
-            'title'=> 'Edit Maker',
-            'data'=> $item
+            'old'=> $item,
         ));
         return $v;
     }
@@ -98,86 +96,14 @@ class MarkerCTL extends BaseCTL {
      * @uri /edit/[:id]
      */
     public function postEdit(){
-        $params = $this->reqInfo->params();
-        $files = $this->reqInfo->files();
-        $remove_file = array();
-
-        // check file .unity
-
-        try {
-            $id = $this->reqInfo->urlParam('id');
-            $time = time();
-            $update = array();
-
-            $old = $this->_get($id);
-
-            if(isset($params['name'])){
-                if($this->isDuplicateName($params['name']) && $params['name'] != $old['name']){
-                    echo "duplicate name";
-                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
-                    exit();
-                }
-                $update['name'] = $params['name'];
-            }
-
-            if(isset($files['marker']) && is_uploaded_file($files['marker']['tmp_name'])){
-                $ext = array_pop(explode('.', $files['marker']['name']));
-                $ext = strtolower($ext);
-
-                if(!in_array($ext, array("jpg", "jpeg", "png"))){
-                    echo "marker is not jpg/jpeg/png file";
-                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
-                    exit();
-                }
-
-                $fileName = uniqid("marker").'.'.$ext;
-                $des = 'public/marker/'.$fileName;
-                move_uploaded_file($files['marker']['tmp_name'], $des);
-                $update['marker_path'] = $fileName;
-                $update['marker_updated_at'] = $time;
-                $remove_file[] = 'public/marker/'.$old['marker_path'];
-            }
-
-            if(isset($files['ios']) && is_uploaded_file($files['ios']['tmp_name'])){
-                $ext = array_pop(explode('.', $files['ios']['name']));
-                $ext = strtolower($ext);
-
-//                if(!in_array($ext, array("jpg", "jpeg", "png"))){
-//                    echo "marker is not jpg/jpeg/png file";
-//                    echo '<meta http-equiv="refresh" content="3; url='.URL::absolute("/marker/edit/".$id).'" />';
-//                    exit();
-//                }
-
-                $fileName = uniqid("ios").'.'.$ext;
-                $des = 'public/ios/'.$fileName;
-                move_uploaded_file($files['ios']['tmp_name'], $des);
-                $update['ios_path'] = $fileName;
-                $update['ios_updated_at'] = $time;
-                $remove_file[] = 'public/ios/'.$old['ios_path'];
-            }
-
-            if(isset($files['android']) && is_uploaded_file($files['android']['tmp_name'])){
-                $ext = array_pop(explode('.', $files['android']['name']));
-
-                $fileName = uniqid("android").'.'.$ext;
-                $des = 'public/android/'.$fileName;
-                move_uploaded_file($files['android']['tmp_name'], $des);
-                $update['android_path'] = $fileName;
-                $update['android_updated_at'] = $time;
-                $remove_file[] = 'public/android/'.$old['android_path'];
-            }
-
-            $db = MedooFactory::getInstance();
-            $id = $db->update('marker', $update, array('id'=> $id));
-
-            foreach($remove_file as $value){
-                unlink(@$value);
-            }
-
-            return new RedirectView(URL::absolute('/marker'));
+        if($_POST["type"] == "image"){
+            return $this->_editImage();
         }
-        catch (ServiceException $e){
-            return new RedirectView(URL::absolute('/marker'));
+        else if($_POST["type"] == "video"){
+            return $this->_editVideo();
+        }
+        else if($_POST["type"] == "model"){
+            return $this->_editModel();
         }
     }
 
@@ -187,7 +113,17 @@ class MarkerCTL extends BaseCTL {
      */
     public function delete(){
         $db = MedooFactory::getInstance();
-        $db->delete('marker', array('id'=> $this->reqInfo->urlParam('id')));
+        $id = $this->reqInfo->urlParam('id');
+        $old = $this->_get($id);
+        $db->delete('marker', array('id'=> $id));
+
+        if(!is_null($old)){
+            @unlink("public/image/".$old["thumbnail_path"]);
+            @unlink("public/image/".$old["image_path"]);
+            @unlink("public/ios/".$old["ios_path"]);
+            @unlink("public/android/".$old["android_path"]);
+            @unlink("public/video/".$old["video_path"]);
+        }
 
         return new RedirectView(URL::absolute('/marker'));
     }
@@ -213,6 +149,7 @@ class MarkerCTL extends BaseCTL {
 
     public function build(&$item){
         $item['thumbnail_url'] = URL::absolute('/public/image/'.$item['thumbnail_path']);
+        $item['image_url'] = URL::absolute('/public/image/'.$item['image_path']);
         $item['ios_url'] = URL::absolute('/public/ios/'.$item['ios_path']);
         $item['android_url'] = URL::absolute('/public/android/'.$item['android_path']);
         $item['video_url'] = URL::absolute('/public/video/'.$item['video_path']);
@@ -256,7 +193,7 @@ class MarkerCTL extends BaseCTL {
         $fileName = uniqid("image").'.'.$ext;
         $des = 'public/image/'.$fileName;
         move_uploaded_file($image['tmp_name'], $des);
-        $insert = ArrayHelper::filterKey(array("name", "type"), $params);
+        $insert = ArrayHelper::filterKey(array("name", "type", "click_url"), $params);
         $insert['image_path'] = $fileName;
         $insert['thumbnail_path'] = $fileName;
         $insert['type'] = "image";
@@ -269,7 +206,64 @@ class MarkerCTL extends BaseCTL {
         $id = $db->insert("marker", $insert);
         if(!$id){
             Event::trigger("when_add_image_fail");
-            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+            $this->errorRedirect(print_r($db->error(), true), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function _editImage(){
+        $id = $this->reqInfo->urlParam("id");
+        $old = $this->_get($id);
+        $params = $this->reqInfo->params();
+
+        $back_url = URL::absolute("/marker/edit/".$id."?type=image");
+        $next_url = URL::absolute("/marker");
+
+        $db = MedooFactory::getInstance();
+
+        $update = ArrayHelper::filterKey(array("name", "type", "click_url"), $params);
+        $update['type'] = "image";
+        $update['version'] = 1;
+        $update['android_path'] = "";
+        $update['ios_path'] = "";
+        $update['video_path'] = "";
+        $update['version'] = $old["version"] + 1;
+
+        // check duplicate name
+        if($old["name"] != $params["name"] && $this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        $image = $this->reqInfo->file("image");
+        if(!is_null($image) && is_uploaded_file($image["tmp_name"])){
+            // check image
+            $image = $this->reqInfo->file("image");
+            if(!is_uploaded_file($image["tmp_name"])){
+                $this->errorRedirect("required image", $back_url);
+            }
+
+            // check type image
+            $ext = $this->_getExt($image["name"]);
+            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+                $this->errorRedirect("image only extension jpg,jpeg,png", $back_url);
+            }
+
+            $fileName = uniqid("image").'.'.$ext;
+            $des = 'public/image/'.$fileName;
+            move_uploaded_file($image['tmp_name'], $des);
+            $update['image_path'] = $fileName;
+            $update['thumbnail_path'] = $fileName;
+
+            Event::add("when_update_image_fail", function() use($des) {
+                @unlink($des);
+            });
+        }
+
+        $success = $db->update("marker", $update, array("id"=> $id));
+        if(!$success){
+            Event::trigger("when_update_image_fail");
+            $this->errorRedirect(print_r($db->error(), true), $back_url);
         }
 
         return new RedirectView(URL::absolute("/marker"));
@@ -341,7 +335,85 @@ class MarkerCTL extends BaseCTL {
         $id = $db->insert("marker", $insert);
         if(!$id){
             Event::trigger("when_add_video_fail");
-            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+            $this->errorRedirect(print_r($db->error(), true), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function _editVideo(){
+        $id = $this->reqInfo->urlParam("id");
+        $old = $this->_get($id);
+        $params = $this->reqInfo->params();
+
+        $back_url = URL::absolute("/marker/edit/".$id."?type=video");
+        $next_url = URL::absolute("/marker");
+
+        $update = ArrayHelper::filterKey(array("name", "type"), $params);
+        $update['type'] = "video";
+        $update['android_path'] = "";
+        $update['ios_path'] = "";
+        $update['image_path'] = "";
+        $update['click_url'] = "";
+        $update['version'] = $old["version"] + 1;
+
+        $db = MedooFactory::getInstance();
+
+        // check duplicate name
+        if($old["name"] != $params["name"] && $this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        $thumbnail = $this->reqInfo->file("thumbnail");
+        if(!is_null($thumbnail) && is_uploaded_file($thumbnail["tmp_name"])){
+            // check thumbnail
+            $thumbnail = $this->reqInfo->file("thumbnail");
+            if(!is_uploaded_file($thumbnail["tmp_name"])){
+                $this->errorRedirect("required thumbnail", $back_url);
+            }
+
+            // check type thumbnail
+            $ext = $this->_getExt($thumbnail["name"]);
+            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+                $this->errorRedirect("thumbnail only extension jpg,jpeg,png", $back_url);
+            }
+
+            $fileName = uniqid("thumbnail").'.'.$ext;
+            $desThumbnail = 'public/image/'.$fileName;
+            move_uploaded_file($thumbnail['tmp_name'], $desThumbnail);
+            Event::add("when_update_video_fail", function() use($desThumbnail) {
+                @unlink($desThumbnail);
+            });
+            $update['thumbnail_path'] = $fileName;
+        }
+
+        $video = $this->reqInfo->file("video");
+        if(!is_null($video) && is_uploaded_file($video["tmp_name"])){
+            // check video
+            $video = $this->reqInfo->file("video");
+            if(!is_uploaded_file($video["tmp_name"])){
+                $this->errorRedirect("required video", $back_url);
+            }
+
+            // check type video
+            $ext = $this->_getExt($video["name"]);
+            if(!in_array($ext, array("mp4"))){
+                $this->errorRedirect("video only extension mp4", $back_url);
+            }
+
+            $fileName = uniqid("video").'.'.$ext;
+            $desVideo = 'public/video/'.$fileName;
+            move_uploaded_file($video['tmp_name'], $desVideo);
+            Event::add("when_update_video_fail", function() use($desVideo) {
+                @unlink($desVideo);
+            });
+            $update['video_path'] = $fileName;
+        }
+
+        $success = $db->update("marker", $update, array("id"=> $id));
+        if(!$success){
+            Event::trigger("when_update_video_fail");
+            $this->errorRedirect(print_r($db->error(), true), $back_url);
         }
 
         return new RedirectView(URL::absolute("/marker"));
@@ -433,7 +505,107 @@ class MarkerCTL extends BaseCTL {
         $id = $db->insert("marker", $insert);
         if(!$id){
             Event::trigger("when_add_model_fail");
-            $this->errorRedirect(print_r($v->errors(), true), $back_url);
+            $this->errorRedirect($db->error(), $back_url);
+        }
+
+        return new RedirectView(URL::absolute("/marker"));
+    }
+
+    public function _editModel(){
+        $id = $this->reqInfo->urlParam("id");
+        $old = $this->_get($id);
+        $params = $this->reqInfo->params();
+
+        $back_url = URL::absolute("/marker/edit/".$id."?type=model");
+        $next_url = URL::absolute("/marker");
+
+        $update = ArrayHelper::filterKey(array("name", "type"), $params);
+        $update['type'] = "model";
+        $update['image_path'] = "";
+        $update['video_path'] = "";
+        $update['click_url'] = "";
+        $update['version'] = $old["version"] + 1;
+
+        $db = MedooFactory::getInstance();
+
+        // check duplicate name
+        if($old["name"] != $params["name"] && $this->isDuplicateName($params['name'])){
+            $this->errorRedirect("duplicate name", $back_url);
+        }
+
+        $thumbnail = $this->reqInfo->file("thumbnail");
+        if(!is_null($thumbnail) && is_uploaded_file($thumbnail["tmp_name"])){
+            // check thumbnail
+            $thumbnail = $this->reqInfo->file("thumbnail");
+            if(!is_uploaded_file($thumbnail["tmp_name"])){
+                $this->errorRedirect("required thumbnail", $back_url);
+            }
+
+            // check type thumbnail
+            $ext = $this->_getExt($thumbnail["name"]);
+            if(!in_array($ext, array("jpg", "jpeg", "png"))){
+                $this->errorRedirect("thumbnail only extension jpg,jpeg,png", $back_url);
+            }
+
+            $fileName = uniqid("thumbnail").'.'.$ext;
+            $desThumbnail = 'public/image/'.$fileName;
+            move_uploaded_file($thumbnail['tmp_name'], $desThumbnail);
+            Event::add("when_update_model_fail", function() use($desThumbnail) {
+                @unlink($desThumbnail);
+            });
+            $update['thumbnail_path'] = $fileName;
+        }
+
+        $ios = $this->reqInfo->file("ios");
+        if(!is_null($ios) && is_uploaded_file($ios["tmp_name"])){
+            // check ios
+            $ios = $this->reqInfo->file("ios");
+            if(!is_uploaded_file($ios["tmp_name"])){
+                $this->errorRedirect("required ios", $back_url);
+            }
+
+            // check type ios
+            $ext = $this->_getExt($ios["name"]);
+            if(!in_array($ext, array("unity"))){
+                $this->errorRedirect("ios only extension unity", $back_url);
+            }
+
+            $fileName = uniqid("ios").'.'.$ext;
+            $desIos = 'public/ios/'.$fileName;
+            move_uploaded_file($ios['tmp_name'], $desIos);
+            Event::add("when_update_model_fail", function() use($desIos) {
+                @unlink($desIos);
+            });
+            $update['ios_path'] = $fileName;
+        }
+
+        $android = $this->reqInfo->file("android");
+        if(!is_null($android) && is_uploaded_file($android["tmp_name"])){
+            // check android
+            $android = $this->reqInfo->file("android");
+            if(!is_uploaded_file($android["tmp_name"])){
+                $this->errorRedirect("required android", $back_url);
+            }
+
+            // check type android
+            $ext = $this->_getExt($android["name"]);
+            if(!in_array($ext, array("unity"))){
+                $this->errorRedirect("android only extension unity", $back_url);
+            }
+
+            $fileName = uniqid("android").'.'.$ext;
+            $desAndroid = 'public/android/'.$fileName;
+            move_uploaded_file($android['tmp_name'], $desAndroid);
+            Event::add("when_update_model_fail", function() use($desAndroid) {
+                @unlink($desAndroid);
+            });
+            $update['android_path'] = $fileName;
+        }
+
+        $success = $db->update("marker", $update, array("id"=> $id));
+        if(!$success){
+            Event::trigger("when_update_video_fail");
+            $this->errorRedirect(print_r($db->error(), true), $back_url);
         }
 
         return new RedirectView(URL::absolute("/marker"));

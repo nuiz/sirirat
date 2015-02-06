@@ -27,7 +27,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="<?php echo \Main\Helper\URL::absolute('');?>">Sirirat</a>
+            <a class="navbar-brand" href="<?php echo \Main\Helper\URL::absolute('');?>">BACK-END</a>
         </div>
     </div>
 </nav>

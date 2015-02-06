@@ -1,6 +1,6 @@
 <?php $this->import('/layout/top');?>
     <div style="text-align: right;">
-        <a class="waves-effect waves-light btn" href="<?php echo \Main\Helper\URL::absolute('/marker/add');?>">Add Marker</a>
+        <a class="waves-effect waves-light btn" href="<?php echo \Main\Helper\URL::absolute('/marker/add');?>">Add</a>
     </div>
     <table class="table table-bordered">
         <thead>
@@ -21,8 +21,8 @@
             <td data-field="name"><?php echo $item['name'];?></td>
             <td data-field="name"><?php echo $item['type'];?></td>
             <td data-field="thumb"><div style="width: 40px; height: 40px; background-image: url(<?php echo $item['thumbnail_url'];?>); background-size: cover;" /></td>
-            <td><a href="<?php echo \Main\Helper\URL::absolute('/marker/edit/'.$item['id']);?>"><i class="mdi-image-edit"></i></a></td>
-            <td><a class="delete-btn" href="<?php echo \Main\Helper\URL::absolute('/marker/delete/'.$item['id']);?>"><i class="mdi-action-delete"></i></a></td>
+            <td><a href="<?php echo \Main\Helper\URL::absolute('/marker/edit/'.$item['id']);?>"><i class="glyphicon glyphicon-edit"></i></a></td>
+            <td><a class="delete-btn" href="<?php echo \Main\Helper\URL::absolute('/marker/delete/'.$item['id']);?>"><i class="glyphicon glyphicon-floppy-remove"></i></a></td>
         </tr>
         <?php }?>
         </tbody>
