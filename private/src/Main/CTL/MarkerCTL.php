@@ -28,7 +28,13 @@ class MarkerCTL extends BaseCTL {
     public function index(){
         $v = new HtmlView('/index');
         $db = MedooFactory::getInstance();
-        $items = $db->select('marker', '*');
+        $keyword = $this->reqInfo->param("keyword");
+        if(is_null($keyword) || $keyword == ""){
+            $items = $db->select('marker', '*');
+        }
+        else {
+            $items = $db->select('marker', '*', array("name[~]"=> "%".$keyword."%"));
+        }
         foreach($items as $key=> $item){
             $this->build($items[$key]);
         }

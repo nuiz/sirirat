@@ -1,4 +1,13 @@
 <?php $this->import('/layout/top');?>
+    <div>
+        <form class="form-inline">
+            <div class="form-group">
+                <label class="sr-only">Search</label>
+                <input type="text" class="form-control" name="keyword" placeholder="Search keyword" value="<?php echo @$_GET["keyword"];?>">
+            </div>
+            <button type="submit" class="btn btn-default">Search</button>
+        </form>
+    </div>
     <div style="text-align: right;">
         <a class="waves-effect waves-light btn" href="<?php echo \Main\Helper\URL::absolute('/marker/add');?>">Add</a>
     </div>
